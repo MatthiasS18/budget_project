@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">budget_project</string>
+    <string name="example_image_photo">example_image_photo</string>
 </resources>

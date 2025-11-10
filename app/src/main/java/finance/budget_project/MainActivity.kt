@@ -9,7 +9,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import finance.budget_project.ui.homePage.HomePageScreen
-import finance.budget_project.ui.login.LoginScreen
 import finance.budget_project.ui.theme.Budget_projectTheme
 
 class MainActivity : ComponentActivity() {

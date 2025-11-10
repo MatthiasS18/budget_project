@@ -66,4 +66,6 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
 
     implementation("androidx.compose.material3:material3:1.2.0")
+
+    implementation("androidx.compose.material:material-icons-extended")
 }

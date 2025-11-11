@@ -35,6 +35,7 @@ fun MainScreen() {
     // LoginScreen()
     // HomePageScreen()
     ExpenseScreen()
+    ExpenseScreen()
 }
 
 

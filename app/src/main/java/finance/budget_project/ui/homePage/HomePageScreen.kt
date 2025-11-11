@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import finance.budget_project.R
 import finance.budget_project.model.Expense
+import finance.budget_project.model.ExpenseCategory
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -51,11 +52,12 @@ fun HomePageScreen(
 ) {
     // --- Liste unique des dépenses ---
     val expenses = listOf(
-        Expense("Food", 30f, Icons.Default.Restaurant, Color(0xFFFF9800)),
-        Expense("Transport", 20f, Icons.Default.DirectionsCar, Color(0xFF4CAF50)),
-        Expense("Rent", 50f, Icons.Default.Home, Color(0xFF2196F3)),
-        Expense("Water", 10f, Icons.Default.WaterDrop, Color(0xFF03A9F4))
+        Expense("Les courses", ExpenseCategory.FOOD, 30f),
+        Expense("Les courses", ExpenseCategory.TRANSPORT, 20f),
+        Expense("Les courses", ExpenseCategory.RENT, 50f),
+        Expense("Les courses", ExpenseCategory.WATER, 10f)
     )
+
 
     Column(
         modifier = Modifier
@@ -157,13 +159,13 @@ fun ExpenseCard(expense: Expense) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = expense.icon,
-            contentDescription = expense.name,
-            tint = expense.color.copy(alpha = 0.8f), // couleur plus douce, effet ombre
+            imageVector = expense.category.icon,
+            contentDescription = expense.category.name,
+            tint = expense.category.color.copy(alpha = 0.8f), // couleur plus douce, effet ombre
             modifier = Modifier
                 .size(50.dp)
                 .background(
-                    color = expense.color.copy(alpha = 0.15f),
+                    color = expense.category.color.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(10.dp),
 
                 )
@@ -172,14 +174,14 @@ fun ExpenseCard(expense: Expense) {
 
 
         Text(
-            text = expense.name,
+            text = expense.category.name,
             color = Color.Black,
             modifier = Modifier.padding(start = 40.dp)
         )
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = "${expense.amount}€",
-            color = expense.color,
+            color = expense.category.color,
             fontWeight = FontWeight.Bold
         )
     }
@@ -199,7 +201,7 @@ fun ExpensePieChart(expenses: List<Expense>) {
             val arcSize = Size(radius * 2, radius * 2)
 
             drawArc(
-                color = expense.color,
+                color = expense.category.color,
                 startAngle = startAngle,
                 sweepAngle = sweepAngle,
                 useCenter = true,
@@ -216,7 +218,7 @@ fun ExpensePieChart(expenses: List<Expense>) {
             )
 
             drawCircle(
-                color = expense.color.copy(alpha = 0.3f),
+                color = expense.category.color.copy(alpha = 0.3f),
                 radius = 25f,
                 center = circleCenter
             )
@@ -228,7 +230,7 @@ fun ExpensePieChart(expenses: List<Expense>) {
             )
 
             drawCircle(
-                color = expense.color,
+                color = expense.category.color,
                 radius = 13f,
                 center = circleCenter
             )

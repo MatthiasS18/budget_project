@@ -1,7 +1,6 @@
 package finance.budget_project.ui.expenses
 
-import android.util.Log
-import androidx.compose.foundation.Image
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -33,22 +31,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -56,15 +49,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import finance.budget_project.R
 import finance.budget_project.model.Expense
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import finance.budget_project.components.WelcomeHeader
 import finance.budget_project.model.ExpenseCategory
+import finance.budget_project.model.dataBaseModel.Repository
+import java.util.Locale
 
 @Composable
 fun ExpenseScreen(
-    expenseViewModel: ExpenseViewModel = ExpenseViewModel()
+    expenseViewModel: ExpenseViewModel = viewModel()
 ) {
     Column(
         modifier = Modifier
@@ -74,46 +74,7 @@ fun ExpenseScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // --- HEADER ---
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp))
-                .background(Color(129, 49, 228))
-                .padding(15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.example_face),
-                    contentDescription = stringResource(R.string.example_image_photo),
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, Color.Transparent, CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-
-                Spacer(modifier = Modifier.size(12.dp))
-
-                Column {
-                    Text(
-                        text = "Welcome",
-                        style = typography.bodyMedium,
-                        color = Color.White,
-                        fontSize = 25.sp
-                    )
-                    Text(
-                        text = "Cartman 👋",
-                        style = typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-
+        WelcomeHeader()
 
         Column(
             modifier = Modifier
@@ -136,30 +97,39 @@ fun ExpenseScreen(
                 // --- BUDGET BOX ---
                 InfoBox(
                     title = "Budget",
-                    amount = expenseViewModel.budget,
-                    textButton= "edit",
+                    amount = Repository.budget.value,
+                    textButton = "edit",
                     allowToAdd = true,
-                    onAddClick = { /* TODO */ },
+                    onAddClick = { expenseViewModel.showEditDialog = true },
                     modifier = Modifier.weight(1f)
                 )
+
+                if (expenseViewModel.showEditDialog) {
+                    EditBudgetDialog(
+                        expenseViewModel = expenseViewModel,
+                        onDismiss = { expenseViewModel.showEditDialog = false }
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // --- TOTAL EXPENSE BOX ---
                 InfoBox(
                     title = "Expenses",
-                    amount = expenseViewModel.expenseTotal,
+                    amount = Repository.expenseTotal,
                     allowToAdd = false,
                     onAddClick = { /* TODO */ },
                     modifier = Modifier.weight(1f)
                 )
+
+
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // --- REST BOX ---
                 InfoBox(
                     title = "Rest",
-                    amount = expenseViewModel.restAvailable,
+                    amount = Repository.restAvailable,
                     allowToAdd = false,
                     onAddClick = { /* TODO */ },
                     modifier = Modifier.weight(1f)
@@ -172,28 +142,36 @@ fun ExpenseScreen(
 
             // 👉 Barre de progression du budget
             BudgetProgressBar(
-                budget = expenseViewModel.budget,
-                spent = expenseViewModel.expenseTotal
+                budget = Repository.budget.value,
+                spent = Repository.expenseTotal
             )
         }
 
 
         // --- BOUTON POUR AJOUTER UNE DÉPENSE ---
-        OutlinedButton(
-            onClick = { expenseViewModel.showDialog = true },
-            shape = RoundedCornerShape(10.dp),
-            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.Start
         ) {
-            Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
-            Spacer(Modifier.width(4.dp))
-            Text("Add Expense", color = Color.Black)
+            OutlinedButton(
+                onClick = { expenseViewModel.showDialog = true },
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
+                Spacer(Modifier.width(4.dp))
+                Text("Add Expenses", color = Color.Black)
+            }
         }
+
 
         // --- LISTE DES DÉPENSES ---
         LazyColumn(Modifier.fillMaxWidth().padding(16.dp)) {
-            items(expenseViewModel.expenses) { expense ->
-                ExpenseItem(expense)
+            items(Repository.expenses) { expense ->
+                ExpenseItem(expense, expenseViewModel = expenseViewModel)
             }
         }
 
@@ -209,47 +187,75 @@ fun ExpenseScreen(
 
 
 @Composable
-fun ExpenseItem(expense: Expense) {
+fun ExpenseItem(expense: Expense, expenseViewModel: ExpenseViewModel) {
+
+    val amountText = expenseViewModel.amount.trim()
+    val amountValue = if (amountText.isNotEmpty()) amountText.toDouble() else 0.0
+    val lineColor = if (amountValue >= 0.0) Color(0xFFF44336) else Color(0xFF4CAF50)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .shadow(4.dp, RoundedCornerShape(20.dp))
-            .background(Color.White)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .background(Color.White, shape = RoundedCornerShape(20.dp))
+            .drawBehind {
+                // Ombre gauche avec dégradé
+                val shadowWidth = 15.dp.toPx()
+                val gradient = Brush.horizontalGradient(
+                    colors = listOf(lineColor, Color.Transparent),
+                    startX = 0f,
+                    endX = shadowWidth
+                )
+                drawRect(
+                    brush = gradient,
+                    size = Size(shadowWidth, size.height)
+                )
+            }
+            .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
+
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Row(
             modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(expense.category.color.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = expense.category.icon,
-                contentDescription = expense.category.name,
-                tint = expense.category.color,
-                modifier = Modifier.size(28.dp)
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(expense.category.color.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = expense.category.icon,
+                    contentDescription = expense.category.name,
+                    tint = expense.category.color,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            Spacer(Modifier.width(16.dp))
+
+            Text(
+                text = expense.name,
+                fontSize = 18.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f)
+            )
+
+            Text(
+                text = "- ${expense.amount}€",
+                fontSize = 18.sp,
+                color = Color.Red,
+                fontWeight = FontWeight.Bold
             )
         }
-
-        Spacer(Modifier.width(16.dp))
-
-        Text(
-            text = expense.category.name,
-            fontSize = 18.sp,
-            color = Color.Black,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
-        )
-
-        Text(
-            text = "${expense.amount}€",
-            fontSize = 18.sp,
-            color = expense.category.color,
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 
@@ -276,7 +282,7 @@ fun InfoBox(
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("$amount")
+                    append(String.format(Locale.US, "%.2f", amount))
                 }
                 withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                     append(" EUR")
@@ -363,7 +369,11 @@ fun BudgetProgressBar(
 
         // Texte sous la barre
         Text(
-            text = "$spent€ / $budget€ ($percentText)",
+            text = if (budget > 0) {
+                "${String.format("%.2f", spent)}€ / ${String.format("%.2f", budget)}€ (${String.format("%.0f", progress * 100)}%)"
+            } else {
+                "0.00€ / 0.00€ (0%)"
+            },
             color = if (progress < 0.7f) Color.Black else Color(0xFF8131E4),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
@@ -376,23 +386,25 @@ fun AddExpenseDialog(
     expenseViewModel: ExpenseViewModel,
     onDismiss: () -> Unit,
 
-) {
-
+    ) {
+    val context = LocalContext.current
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             Button(onClick = {
                 val amountValue = expenseViewModel.amount.toFloatOrNull() ?: 0f
-                if (expenseViewModel.name.isNotBlank() && amountValue > 0f) {
-                    expenseViewModel.addExpense(
+               //  var namecategory = expenseViewModel.selectedCategory.displayName
+                if (Repository.addExpense(
                         Expense(
                             name = expenseViewModel.name,
                             amount = amountValue,
-                            category =  expenseViewModel.selectedCategory
-
+                            category = expenseViewModel.selectedCategory
                         )
                     )
+                ) {
                     onDismiss()
+                } else {
+                    Toast.makeText(context, "Budget exceeded !", Toast.LENGTH_SHORT).show()
                 }
             }) {
                 Text("Add")
@@ -414,7 +426,12 @@ fun AddExpenseDialog(
                 )
                 OutlinedTextField(
                     value = expenseViewModel.amount,
-                    onValueChange = { expenseViewModel.amount = it },
+                    onValueChange = { input ->
+                        val regex = Regex("^\\d*\\.?\\d{0,2}$")
+                        if (input.isEmpty() || regex.matches(input)) {
+                            expenseViewModel.amount = input
+                        }
+                    },
                     label = { Text("Amount (€)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
@@ -425,49 +442,73 @@ fun AddExpenseDialog(
                 Text("Choose category", fontWeight = FontWeight.Bold)
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IconButton(onClick = {
-                        expenseViewModel.selectedIcon = Icons.Default.Fastfood
-                        expenseViewModel.selectedColor = Color(0xFFFFA726)
-                    }) {
-                        Icon(
-                            Icons.Default.Fastfood,
-                            contentDescription = null,
-                            tint = Color(0xFFFFA726)
-                        )
-                    }
-                    IconButton(onClick = {
-                        expenseViewModel.selectedIcon = Icons.Default.Home
-                        expenseViewModel.selectedColor = Color(0xFF42A5F5)
-                    }) {
-                        Icon(
-                            Icons.Default.Home,
-                            contentDescription = null,
-                            tint = Color(0xFF42A5F5)
-                        )
-                    }
-                    IconButton(onClick = {
-                        expenseViewModel.selectedIcon = Icons.Default.WaterDrop
-                        expenseViewModel.selectedColor = Color(0xFF03A9F4)
-                    }) {
-                        Icon(
-                            Icons.Default.WaterDrop,
-                            contentDescription = null,
-                            tint = Color(0xFF03A9F4)
-                        )
-                    }
-                    IconButton(onClick = {
-                        expenseViewModel.selectedIcon = Icons.Default.DirectionsCar
-                        expenseViewModel.selectedColor = Color(0xFF4CAF50)
-                    }) {
-                        Icon(
-                            Icons.Default.DirectionsCar,
-                            contentDescription = null,
-                            tint = Color(0xFF4CAF50)
-                        )
+                    ExpenseCategory.entries.forEach { category ->
+                        IconButton(onClick = {
+                            expenseViewModel.selectedCategory = category
+
+                        }) {
+                            Icon(
+                                imageVector = category.icon,
+                                contentDescription = category.displayName,
+                                tint = category.color
+                            )
+                        }
                     }
                 }
+
             }
         }
     )
 }
+
+
+
+@Composable
+fun EditBudgetDialog(
+    expenseViewModel: ExpenseViewModel,
+    onDismiss: () -> Unit
+) {
+    var newBudgetText by remember { mutableStateOf(Repository.budget.value.toString()) }
+    val context = LocalContext.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(onClick = {
+                val newBudget = newBudgetText.toDoubleOrNull()
+                if (newBudget != null && newBudget >= Repository.expenseTotal) {
+                    Repository.updateBudget(newBudget)
+                    onDismiss()
+                } else {
+                    Toast.makeText(context, "Budget must be ≥ total expenses!", Toast.LENGTH_SHORT).show()
+                }
+            }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        title = { Text("Edit Budget") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = newBudgetText,
+                    onValueChange = { input ->
+                        val regex = Regex("^\\d*\\.?\\d{0,2}$")
+                        if (input.isEmpty() || regex.matches(input)) {
+                            newBudgetText = input
+                        }
+                    },
+                    label = { Text("Budget (€)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    )
+}
+
 

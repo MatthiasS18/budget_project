@@ -1,5 +1,6 @@
 package finance.budget_project.ui.login
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,11 +13,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -24,12 +25,17 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import finance.budget_project.ui.auth.AuthViewModel
 
 @Composable
 fun LoginScreen(
+    navController : NavHostController,
+    toScreen : String,
     loginViewModel: LoginViewModel = viewModel()
-
 ){
+    var context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -87,13 +93,23 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = {
-                // navController.navigate(currentScreen[0].name)
+                AuthViewModel.login(
+                    loginViewModel.mail,
+                    loginViewModel.textValuePassword
+                ) { success ->
+                    if (success) {
+                        Log.d("super", "super login")
+                        navController.navigate(toScreen)
+                    } else {
+                        Log.d("failed", "super login failed")
+                    }
+                }
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(87,26,162),
-                contentColor = Color(255,255,255),
-
-                ),modifier = Modifier.fillMaxWidth()
+                contentColor = Color.White
+            ),
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
                 text = "Sign In",

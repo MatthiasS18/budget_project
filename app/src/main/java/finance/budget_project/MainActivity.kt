@@ -28,7 +28,10 @@ import finance.budget_project.ui.expenses.ExpenseScreen
 import finance.budget_project.ui.homePage.HomePageScreen
 import finance.budget_project.ui.theme.Budget_projectTheme
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import finance.budget_project.model.dataBaseModel.Repository
 import finance.budget_project.ui.login.LoginScreen
 import finance.budget_project.ui.signUp.SignUpScreen
 
@@ -44,6 +47,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        Repository.initDataBase(this)
         setContent {
             Budget_projectTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
@@ -111,10 +115,12 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             ExpenseScreen()
         }
         composable(MainActivity.CurrentScreen.SignUp.name) {
-             SignUpScreen()
+            val toScreen = MainActivity.CurrentScreen.LogIn.name
+             SignUpScreen(navController, toScreen)
         }
         composable(MainActivity.CurrentScreen.LogIn.name) {
-             LoginScreen()
+            val toScreen = MainActivity.CurrentScreen.Home.name
+            LoginScreen(navController, toScreen)
         }
     }
 }

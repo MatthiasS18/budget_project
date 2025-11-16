@@ -233,7 +233,7 @@ fun ExpensePieChart(expenses: List<Expense>) {
                     x = circleCenter.x + textDistance * cos(angleRad).toFloat(),
                     y = circleCenter.y + textDistance * sin(angleRad).toFloat()
                 )
-                val percent = (expense.amount / total * 100).toInt()
+                val percent = (expense.amount / total * 100)
                 val textAlign = when {
                     middleAngle in -90f..90f -> android.graphics.Paint.Align.LEFT
                     else -> android.graphics.Paint.Align.RIGHT

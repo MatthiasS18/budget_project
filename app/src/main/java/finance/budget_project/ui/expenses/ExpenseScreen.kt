@@ -22,10 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,13 +31,20 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -49,17 +52,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import finance.budget_project.model.Expense
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import finance.budget_project.components.WelcomeHeader
+import finance.budget_project.model.Expense
 import finance.budget_project.model.ExpenseCategory
-import finance.budget_project.model.dataBaseModel.Repository
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 @Composable
@@ -97,7 +95,7 @@ fun ExpenseScreen(
                 // --- BUDGET BOX ---
                 InfoBox(
                     title = "Budget",
-                    amount = Repository.budget.value,
+                    amount = expenseViewModel.budget.value,
                     textButton = "edit",
                     allowToAdd = true,
                     onAddClick = { expenseViewModel.showEditDialog = true },
@@ -116,12 +114,11 @@ fun ExpenseScreen(
                 // --- TOTAL EXPENSE BOX ---
                 InfoBox(
                     title = "Expenses",
-                    amount = Repository.expenseTotal,
+                    amount = expenseViewModel.expenseTotal,
                     allowToAdd = false,
                     onAddClick = { /* TODO */ },
                     modifier = Modifier.weight(1f)
                 )
-
 
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -129,7 +126,7 @@ fun ExpenseScreen(
                 // --- REST BOX ---
                 InfoBox(
                     title = "Rest",
-                    amount = Repository.restAvailable,
+                    amount = expenseViewModel.restAvailable,
                     allowToAdd = false,
                     onAddClick = { /* TODO */ },
                     modifier = Modifier.weight(1f)
@@ -142,8 +139,9 @@ fun ExpenseScreen(
 
             // 👉 Barre de progression du budget
             BudgetProgressBar(
-                budget = Repository.budget.value,
-                spent = Repository.expenseTotal
+                budget = expenseViewModel.budget.value,
+                spent = expenseViewModel.expenseTotal,
+                expenseViewModel = expenseViewModel
             )
         }
 
@@ -170,7 +168,7 @@ fun ExpenseScreen(
 
         // --- LISTE DES DÉPENSES ---
         LazyColumn(Modifier.fillMaxWidth().padding(16.dp)) {
-            items(Repository.expenses) { expense ->
+            items(expenseViewModel.expenses) { expense ->
                 ExpenseItem(expense, expenseViewModel = expenseViewModel)
             }
         }
@@ -199,7 +197,6 @@ fun ExpenseItem(expense: Expense, expenseViewModel: ExpenseViewModel) {
             .padding(vertical = 6.dp)
             .background(Color.White, shape = RoundedCornerShape(20.dp))
             .drawBehind {
-                // Ombre gauche avec dégradé
                 val shadowWidth = 15.dp.toPx()
                 val gradient = Brush.horizontalGradient(
                     colors = listOf(lineColor, Color.Transparent),
@@ -262,12 +259,13 @@ fun ExpenseItem(expense: Expense, expenseViewModel: ExpenseViewModel) {
 
 @Composable
 fun InfoBox(
+    modifier: Modifier = Modifier,
     title: String,
     amount: Double,
     textButton: String = "",
     allowToAdd : Boolean = false,
     onAddClick: () -> Unit,
-    modifier: Modifier = Modifier
+
 ) {
     Column(
         modifier = modifier
@@ -323,10 +321,9 @@ fun InfoBox(
 fun BudgetProgressBar(
     budget: Double,
     spent: Double,
+    expenseViewModel: ExpenseViewModel,
     modifier: Modifier = Modifier
 ) {
-    val progress = (spent.toFloat() / budget.toFloat()).coerceIn(0f, 1f)
-    val percentText = "${(progress * 100).toInt()}%"
 
     Column(
         modifier = modifier.padding(16.dp),
@@ -351,7 +348,7 @@ fun BudgetProgressBar(
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(progress)
+                    .fillMaxWidth(expenseViewModel.progress)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(50))
                     .background(
@@ -370,11 +367,11 @@ fun BudgetProgressBar(
         // Texte sous la barre
         Text(
             text = if (budget > 0) {
-                "${String.format("%.2f", spent)}€ / ${String.format("%.2f", budget)}€ (${String.format("%.0f", progress * 100)}%)"
+                "${String.format("%.2f", spent)}€ / ${String.format("%.2f", budget)}€ (${String.format("%.0f", expenseViewModel.progress * 100)}%)"
             } else {
                 "0.00€ / 0.00€ (0%)"
             },
-            color = if (progress < 0.7f) Color.Black else Color(0xFF8131E4),
+            color = if (expenseViewModel.progress < 0.7f) Color.Black else Color(0xFF8131E4),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
@@ -387,24 +384,25 @@ fun AddExpenseDialog(
     onDismiss: () -> Unit,
 
     ) {
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             Button(onClick = {
                 val amountValue = expenseViewModel.amount.toFloatOrNull() ?: 0f
-               //  var namecategory = expenseViewModel.selectedCategory.displayName
-                if (Repository.addExpense(
-                        Expense(
-                            name = expenseViewModel.name,
-                            amount = amountValue,
-                            category = expenseViewModel.selectedCategory
-                        )
-                    )
-                ) {
-                    onDismiss()
-                } else {
-                    Toast.makeText(context, "Budget exceeded !", Toast.LENGTH_SHORT).show()
+                val newExpense = Expense(
+                    name = expenseViewModel.name,
+                    amount = amountValue,
+                    category = expenseViewModel.selectedCategory
+                )
+                coroutineScope.launch {
+                    val added = expenseViewModel.addExpense(newExpense)
+                    if (added) {
+                        onDismiss()
+                    } else {
+                        Toast.makeText(context, "Budget exceeded!", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }) {
                 Text("Add")
@@ -468,19 +466,27 @@ fun EditBudgetDialog(
     expenseViewModel: ExpenseViewModel,
     onDismiss: () -> Unit
 ) {
-    var newBudgetText by remember { mutableStateOf(Repository.budget.value.toString()) }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             Button(onClick = {
+                val newBudgetText = expenseViewModel.newBudgetText
                 val newBudget = newBudgetText.toDoubleOrNull()
-                if (newBudget != null && newBudget >= Repository.expenseTotal) {
-                    Repository.updateBudget(newBudget)
-                    onDismiss()
+
+                if (newBudget != null && newBudget >= expenseViewModel.expenseTotal) {
+                    coroutineScope.launch {
+                        expenseViewModel.updateBudget(newBudget)
+                        onDismiss()
+                    }
                 } else {
-                    Toast.makeText(context, "Budget must be ≥ total expenses!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Budget must be ≥ total expenses!",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }) {
                 Text("Save")
@@ -495,11 +501,11 @@ fun EditBudgetDialog(
         text = {
             Column {
                 OutlinedTextField(
-                    value = newBudgetText,
+                    value = expenseViewModel.newBudgetText,
                     onValueChange = { input ->
                         val regex = Regex("^\\d*\\.?\\d{0,2}$")
                         if (input.isEmpty() || regex.matches(input)) {
-                            newBudgetText = input
+                            expenseViewModel.newBudgetText = input
                         }
                     },
                     label = { Text("Budget (€)") },

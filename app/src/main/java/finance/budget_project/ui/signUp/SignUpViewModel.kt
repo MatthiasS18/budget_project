@@ -13,11 +13,4 @@ class SignUpViewModel : ViewModel(){
     var textValuePasswordConfirm by mutableStateOf("")
 
 
-    fun clickToSignUp(){
-
-    }
-
-
-
-
 }

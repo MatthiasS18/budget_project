@@ -1,7 +1,6 @@
 package finance.budget_project.network
 
 
-import android.util.Log
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody

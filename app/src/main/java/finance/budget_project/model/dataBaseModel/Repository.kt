@@ -133,7 +133,7 @@ object Repository {
 
 
     suspend fun saveBudgetToDatabase(amount: Double) {
-        budget.value = amount;
+        budget.value = amount
         database?.theDAO()?.saveBudget(BudgetEntity(amount = amount))
     }
 

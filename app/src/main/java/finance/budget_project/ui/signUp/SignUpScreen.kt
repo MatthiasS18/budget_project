@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import finance.budget_project.ui.auth.AuthViewModel
 
 @Composable
 fun SignUpScreen(
@@ -31,6 +33,9 @@ fun SignUpScreen(
     toScreen : String,
     signUpViewModel: SignUpViewModel = viewModel()
 ){
+
+    var context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -120,7 +125,8 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = {
-                // navController.navigate(currentScreen[0].name)
+                AuthViewModel.signup(context = context, signUpViewModel.fullName, signUpViewModel.mail,signUpViewModel.textValuePassword)
+                navController.navigate(toScreen)
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(87,26,162),

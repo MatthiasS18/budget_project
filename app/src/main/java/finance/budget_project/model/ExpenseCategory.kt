@@ -26,6 +26,6 @@ enum class ExpenseCategory(
 
     companion object {
         // 🔍 Permet de retrouver une catégorie à partir de son ID
-        fun fromId(id: Int): ExpenseCategory? = values().find { it.id == id }
+        fun fromId(id: Int): ExpenseCategory? = ExpenseCategory.entries.find { it.id == id }
     }
 }

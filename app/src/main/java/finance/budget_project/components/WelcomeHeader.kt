@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import finance.budget_project.R
-
+import finance.budget_project.ui.auth.AuthViewModel
 
 @Composable
 fun WelcomeHeader(padding: Dp = 20.dp) {
@@ -60,8 +60,9 @@ fun WelcomeHeader(padding: Dp = 20.dp) {
                     color = Color.White,
                     fontSize = 25.sp
                 )
+                val name = AuthViewModel.fullName ?: "User"
                 Text(
-                    text = "Cartman 👋",
+                    text = "$name 👋",
                     style = typography.titleMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold

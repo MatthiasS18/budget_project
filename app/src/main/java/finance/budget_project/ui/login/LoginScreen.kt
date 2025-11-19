@@ -1,6 +1,7 @@
 package finance.budget_project.ui.login
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,15 +27,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import finance.budget_project.MainActivity
 import finance.budget_project.ui.auth.AuthViewModel
 
 @Composable
 fun LoginScreen(
-    navController : NavHostController,
-    toScreen : String,
+    navController: NavHostController,
+    toScreen: String,
     loginViewModel: LoginViewModel = viewModel()
-){
-    var context = LocalContext.current
+) {
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -54,12 +56,11 @@ fun LoginScreen(
         Text("Let's sign you in to your account")
         Spacer(modifier = Modifier.height(16.dp))
 
-
+        // Email
         OutlinedTextField(
             value = loginViewModel.mail,
             onValueChange = { newValue ->
-                val sanitizedValue = newValue.replace("\n", "")
-                loginViewModel.mail = sanitizedValue
+                loginViewModel.mail = newValue.replace("\n", "")
             },
             label = {
                 Text(
@@ -72,11 +73,11 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        // Password
         OutlinedTextField(
             value = loginViewModel.textValuePassword,
             onValueChange = { newValue ->
-                val sanitizedValue = newValue.replace("\n", "")
-                loginViewModel.textValuePassword = sanitizedValue
+                loginViewModel.textValuePassword = newValue.replace("\n", "")
             },
             label = {
                 Text(
@@ -91,22 +92,35 @@ fun LoginScreen(
         )
 
         Spacer(modifier = Modifier.height(20.dp))
+
         Button(
             onClick = {
                 AuthViewModel.login(
-                    loginViewModel.mail,
-                    loginViewModel.textValuePassword
+                    context = context,
+                    email = loginViewModel.mail,
+                    password = loginViewModel.textValuePassword
                 ) { success ->
                     if (success) {
-                        Log.d("super", "super login")
-                        navController.navigate(toScreen)
+                        Log.d("LoginScreen", "Login success, navigating")
+                        navController.navigate(toScreen) {
+                            // On enlève l’écran Login de la backstack
+                            popUpTo(MainActivity.CurrentScreen.LogIn.name) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
                     } else {
-                        Log.d("failed", "super login failed")
+                        Log.d("LoginScreen", "Login failed")
+                        Toast.makeText(
+                            context,
+                            "Login failed, check your credentials",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(87,26,162),
+                containerColor = Color(87, 26, 162),
                 contentColor = Color.White
             ),
             modifier = Modifier.fillMaxWidth()

@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import finance.budget_project.components.WelcomeHeader
 import finance.budget_project.model.Expense
 import finance.budget_project.model.dataBaseModel.Repository
+import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -241,7 +242,7 @@ fun ExpensePieChart(expenses: List<Expense>) {
                 drawContext.canvas.nativeCanvas.apply {
                     val textX = textCenter.x + if (textAlign == android.graphics.Paint.Align.LEFT) iconSize / 2 + 8f else -iconSize / 2 - 8f
                     drawText(
-                        "${percent}%",
+                        "${String.format(Locale.US, "%.2f", percent)} %",
                         textX,
                         textCenter.y,
                         android.graphics.Paint().apply {

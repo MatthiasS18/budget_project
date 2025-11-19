@@ -15,7 +15,7 @@ interface ExpenseDAO {
      *
      * @param expense The expense item to insert.
      */
-    @Insert(onConflict = OnConflictStrategy.Companion.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertExpense(expense: ExpenseEntity)
 
     /**

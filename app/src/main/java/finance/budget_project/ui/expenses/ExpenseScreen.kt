@@ -31,11 +31,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,7 +52,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import finance.budget_project.components.WelcomeHeader
 import finance.budget_project.model.Expense
 import finance.budget_project.model.ExpenseCategory
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -364,10 +359,9 @@ fun BudgetProgressBar(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Texte sous la barre
         Text(
             text = if (budget > 0) {
-                "${String.format("%.2f", spent)}€ / ${String.format("%.2f", budget)}€ (${String.format("%.0f", expenseViewModel.progress * 100)}%)"
+                "${String.format(Locale.US,"%.2f", spent)}€ / ${String.format(Locale.US,"%.2f", budget)}€ (${String.format(Locale.US,"%.0f", expenseViewModel.progress * 100)}%)"
             } else {
                 "0.00€ / 0.00€ (0%)"
             },

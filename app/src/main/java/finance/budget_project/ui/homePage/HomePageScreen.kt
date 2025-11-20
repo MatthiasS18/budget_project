@@ -51,6 +51,9 @@ fun HomePageScreen(
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
+
+        Text(text = "Home", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp))
+
         // --- HEADER ---
         WelcomeHeader()
 

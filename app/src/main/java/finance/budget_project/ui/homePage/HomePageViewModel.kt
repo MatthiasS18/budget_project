@@ -29,7 +29,8 @@ class HomePageViewModel : ViewModel() {
                     name = entity.name,
                     amount = entity.amount,
                     category = ExpenseCategory.fromId(entity.categoryId)
-                        ?: ExpenseCategory.FOOD
+                        ?: ExpenseCategory.FOOD,
+                    date = entity.date
                 )
             }
 

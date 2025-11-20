@@ -9,5 +9,6 @@ data class ExpenseEntity(
     val id: Int = 0,
     val name: String,
     val categoryId: Int,
-    val amount: Float
+    val amount: Float,
+    val date: String
 )

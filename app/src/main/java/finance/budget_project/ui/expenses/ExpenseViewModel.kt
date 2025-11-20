@@ -1,6 +1,5 @@
 package finance.budget_project.ui.expenses
 
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.runtime.getValue
@@ -14,11 +13,15 @@ import finance.budget_project.model.Expense
 import finance.budget_project.model.ExpenseCategory
 import finance.budget_project.model.dataBaseModel.Repository
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ExpenseViewModel : ViewModel() {
 
 
     val expenses = Repository.expenses
+
+    var dateOfLastExpense = expenses.lastOrNull()?.date
     val budget = Repository.budget
     val expenseTotal get() = Repository.expenseTotal
     val restAvailable get() = Repository.restAvailable
@@ -40,6 +43,8 @@ class ExpenseViewModel : ViewModel() {
     val progress: Float
         get() = (expenseTotal / Repository.budget.doubleValue).toFloat().coerceIn(0f, 1f)
 
+    var isSameDayExpense by mutableStateOf("")
+
 
 
     init {
@@ -51,7 +56,8 @@ class ExpenseViewModel : ViewModel() {
                     name = entity.name,
                     amount = entity.amount,
                     category = ExpenseCategory.fromId(entity.categoryId)
-                        ?: ExpenseCategory.FOOD
+                        ?: ExpenseCategory.FOOD,
+                    date = entity.date
                 )
             }
 
@@ -66,17 +72,18 @@ class ExpenseViewModel : ViewModel() {
 
     suspend fun addExpense(expense: Expense): Boolean {
         val canAdd = Repository.addExpense(expense)
+        val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
         if (canAdd) {
             val entity = ExpenseEntity(
                 name = expense.name,
                 categoryId = expense.category.id,
-                amount = expense.amount
+                amount = expense.amount,
+                date = today
             )
             Repository.insertExpenseInDatabase(entity)
-            Log.d("success added", "AJOUTE")
+            isSameDayExpense = expense.date
             return true
         } else {
-            Log.d("fail", "FAIL")
             return false
         }
     }

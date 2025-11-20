@@ -35,9 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -53,8 +51,9 @@ import finance.budget_project.components.WelcomeHeader
 import finance.budget_project.model.Expense
 import finance.budget_project.model.ExpenseCategory
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
-
 @Composable
 fun ExpenseScreen(
     expenseViewModel: ExpenseViewModel = viewModel()
@@ -66,6 +65,7 @@ fun ExpenseScreen(
     ) {
         Spacer(modifier = Modifier.height(20.dp))
 
+        Text(text = "Expenses", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp))
         // --- HEADER ---
         WelcomeHeader()
 
@@ -98,15 +98,12 @@ fun ExpenseScreen(
                 )
 
                 if (expenseViewModel.showEditDialog) {
-                    EditBudgetDialog(
-                        expenseViewModel = expenseViewModel,
-                        onDismiss = { expenseViewModel.showEditDialog = false }
-                    )
-                }
+                    EditBudgetDialog( expenseViewModel = expenseViewModel, onDismiss = {
+                        expenseViewModel.showEditDialog = false } ) }
+
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // --- TOTAL EXPENSE BOX ---
                 InfoBox(
                     title = "Expenses",
                     amount = expenseViewModel.expenseTotal,
@@ -115,10 +112,8 @@ fun ExpenseScreen(
                     modifier = Modifier.weight(1f)
                 )
 
-
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // --- REST BOX ---
                 InfoBox(
                     title = "Rest",
                     amount = expenseViewModel.restAvailable,
@@ -126,13 +121,10 @@ fun ExpenseScreen(
                     onAddClick = { /* TODO */ },
                     modifier = Modifier.weight(1f)
                 )
-
-
-
             }
+
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 👉 Barre de progression du budget
             BudgetProgressBar(
                 budget = expenseViewModel.budget.value,
                 spent = expenseViewModel.expenseTotal,
@@ -140,8 +132,6 @@ fun ExpenseScreen(
             )
         }
 
-
-        // --- BOUTON POUR AJOUTER UNE DÉPENSE ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -160,28 +150,46 @@ fun ExpenseScreen(
             }
         }
 
+        val dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val uiFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+        var lastExpenseLocalDate: LocalDate? = null
 
-        // --- LISTE DES DÉPENSES ---
         LazyColumn(Modifier.fillMaxWidth().padding(16.dp)) {
             items(expenseViewModel.expenses) { expense ->
-                ExpenseItem(expense, expenseViewModel = expenseViewModel)
+                val expenseLocalDate = LocalDate.parse(expense.date, dbFormatter)
+
+                // Afficher la date seulement si différente de la précédente ou première dépense
+                if (lastExpenseLocalDate == null || expenseLocalDate != lastExpenseLocalDate) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            color = Color.Gray,
+                            text = expenseLocalDate.format(uiFormatter),
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                ExpenseItem(expense, expenseViewModel)
+
+                lastExpenseLocalDate = expenseLocalDate
             }
         }
 
         if (expenseViewModel.showDialog) {
             AddExpenseDialog(
                 onDismiss = { expenseViewModel.showDialog = false },
-                expenseViewModel = expenseViewModel,
-                // onAddExpense = { expenseViewModel.addExpense(it) }
+                expenseViewModel = expenseViewModel
             )
         }
     }
 }
 
-
 @Composable
 fun ExpenseItem(expense: Expense, expenseViewModel: ExpenseViewModel) {
-
     val amountText = expenseViewModel.amount.trim()
     val amountValue = if (amountText.isNotEmpty()) amountText.toDouble() else 0.0
     val lineColor = if (amountValue >= 0.0) Color(0xFFF44336) else Color(0xFF4CAF50)
@@ -190,24 +198,17 @@ fun ExpenseItem(expense: Expense, expenseViewModel: ExpenseViewModel) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .background(Color.White, shape = RoundedCornerShape(20.dp))
-            .drawBehind {
-                val shadowWidth = 15.dp.toPx()
-                val gradient = Brush.horizontalGradient(
-                    colors = listOf(lineColor, Color.Transparent),
-                    startX = 0f,
-                    endX = shadowWidth
-                )
-                drawRect(
-                    brush = gradient,
-                    size = Size(shadowWidth, size.height)
-                )
-            }
+            .background(
+                brush = Brush.horizontalGradient(
+                    0.0f to Color.Red,
+                    0.06f to Color.White,
+                    1.0f to Color.White
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
             .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
-    ) {
-
-
+    ){
         Spacer(modifier = Modifier.width(16.dp))
 
         Row(
@@ -250,6 +251,7 @@ fun ExpenseItem(expense: Expense, expenseViewModel: ExpenseViewModel) {
         }
     }
 }
+
 
 
 @Composable
@@ -378,8 +380,15 @@ fun AddExpenseDialog(
     onDismiss: () -> Unit,
 
     ) {
+
+
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+
+
+    val formatter = DateTimeFormatter.ISO_LOCAL_DATE // ou ofPattern("dd/MM/yyyy")
+    val today = LocalDate.now().format(formatter)
+
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -388,7 +397,8 @@ fun AddExpenseDialog(
                 val newExpense = Expense(
                     name = expenseViewModel.name,
                     amount = amountValue,
-                    category = expenseViewModel.selectedCategory
+                    category = expenseViewModel.selectedCategory,
+                    date = today
                 )
                 coroutineScope.launch {
                     val added = expenseViewModel.addExpense(newExpense)

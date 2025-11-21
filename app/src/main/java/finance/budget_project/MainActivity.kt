@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setTheme(R.style.Theme_Budget_project)
         enableEdgeToEdge()
         Repository.initDataBase(this)
         setContent {
@@ -65,7 +66,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 
 
 @Composable

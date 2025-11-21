@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Thème principal de l'app -->
+    <style name="Theme.Budget_project" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- ton thème normal ici -->
+    </style>
+
+    <!-- Thème pour le splash -->
+    <style name="Theme.Budget_project.Splash" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/bank_animated</item>
+        <item name="android:windowSplashScreenBackground">@color/purple_500</item>
+        <item name="android:windowSplashScreenAnimationDuration">700</item>
+    </style>
+
+
+</resources>
